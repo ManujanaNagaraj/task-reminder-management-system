@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TaskMaster</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container flex justify-between items-center">
+            <a href="#" class="nav-brand">TaskMaster</a>
+            <div class="flex items-center gap-4">
+                <span id="userGreeting" style="font-size: 0.875rem; color: var(--text-secondary);"></span>
+                <button onclick="auth.logout()" class="btn btn-secondary">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 2rem;">
+        <div class="flex gap-4" style="align-items: flex-start;">
+            <!-- Sidebar -->
+            <aside style="width: 250px; flex-shrink: 0;" class="card">
+                <nav>
+                    <ul style="list-style: none;">
+                        <li class="mb-4">
+                            <a href="#" class="flex items-center gap-4"
+                                style="color: var(--primary-color); font-weight: 500;">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                    </path>
+                                </svg>
+                                My Tasks
+                            </a>
+                        </li>
+                        <li class="mb-4">
+                            <a href="#" class="flex items-center gap-4" style="color: var(--text-secondary);">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                Calendar
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main style="flex-grow: 1;">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">My Tasks</h2>
+                    <button class="btn btn-primary">+ New Task</button>
+                </div>
+
+                <div id="tasksContainer">
+                    <!-- Tasks will be loaded here -->
+                    <div class="text-center" style="padding: 2rem; color: var(--text-secondary);">Loading tasks...</div>
+                </div>
+
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 3rem; margin-bottom: 1rem;">Calendar View
+                </h2>
+                <div id="calendarContainer">
+                    <!-- Calendar tasks will be loaded here -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        checkAuthRedirect();
+
+        function renderTaskCard(task) {
+            const isCompleted = task.is_completed;
+            const statusClass = isCompleted ? 'status-completed' : 'status-pending';
+            const statusText = isCompleted ? 'Completed' : 'Pending';
+
+            return `
+                <div class="card mb-4 flex justify-between items-center">
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">${task.title}</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">${task.description || 'No description'}</p>
+                        <div class="flex items-center gap-4" style="font-size: 0.75rem; color: var(--text-secondary);">
+                            <span>Due: ${formatDate(task.due_date)}</span>
+                        </div>
+                    </div>
+                    <span class="task-status ${statusClass}">${statusText}</span>
+                </div>
+            `;
+        }
+
+        async function loadDashboard() {
+            // Load Standard Tasks
+            const tasks = await api.getTasks();
+            const container = document.getElementById('tasksContainer');
+
+            if (tasks && tasks.length > 0) {
+                container.innerHTML = tasks.map(renderTaskCard).join('');
+            } else {
+                container.innerHTML = '<div class="card text-center" style="color: var(--text-secondary);">No tasks found. Create one to get started!</div>';
+            }
+
+            // Load Calendar Tasks
+            const calendarData = await api.getCalendarTasks();
+            const calContainer = document.getElementById('calendarContainer');
+
+            if (calendarData && Object.keys(calendarData).length > 0) {
+                let html = '';
+                // Sort dates
+                const dates = Object.keys(calendarData).sort();
+
+                for (const date of dates) {
+                    const dayTasks = calendarData[date];
+                    html += `<div class="date-header">${new Date(date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>`;
+                    html += dayTasks.map(renderTaskCard).join('');
+                }
+                calContainer.innerHTML = html;
+            } else {
+                calContainer.innerHTML = '<p style="color: var(--text-secondary);">No upcoming tasks scheduled.</p>';
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>

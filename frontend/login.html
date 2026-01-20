@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TaskMaster</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container flex justify-center items-center" style="min-height: 100vh;">
+        <div class="card" style="width: 100%; max-width: 400px;">
+            <div class="text-center mb-4">
+                <h2 style="font-size: 1.5rem; font-weight: 700;">Welcome back</h2>
+                <p style="color: var(--text-secondary);">Please enter your details to sign in.</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label class="input-label" for="username">Username</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+
+                <div id="errorMsg" style="color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; display: none;"></div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign in</button>
+            </form>
+
+            <p class="text-center mt-4" style="font-size: 0.875rem; color: var(--text-secondary);">
+                Don't have an account? <a href="#" style="color: var(--primary-color);">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        checkAuthRedirect();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            const result = await auth.login(username, password);
+            
+            if (result.success) {
+                window.location.href = 'dashboard.html';
+            } else {
+                errorMsg.textContent = result.error;
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
