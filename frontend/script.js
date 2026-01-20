@@ -5,7 +5,7 @@ const auth = {
     setToken: (token) => localStorage.setItem('token', token),
     removeToken: () => localStorage.removeItem('token'),
     isAuthenticated: () => !!localStorage.getItem('token'),
-    
+
     login: async (username, password) => {
         try {
             const response = await fetch(`${BASE_URL}/login/`, {
@@ -23,7 +23,28 @@ const auth = {
             return { success: false, error: 'Network error occurred' };
         }
     },
-    
+
+    register: async (username, password, email, phone) => {
+        try {
+            const response = await fetch(`${BASE_URL}/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, email, phone })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                // Automatically login after successful registration
+                return await auth.login(username, password);
+            }
+            return {
+                success: false,
+                error: data.username?.[0] || data.email?.[0] || data.password?.[0] || data.non_field_errors?.[0] || 'Registration failed'
+            };
+        } catch (error) {
+            return { success: false, error: 'Network error occurred' };
+        }
+    },
+
     logout: () => {
         auth.removeToken();
         window.location.href = '/login.html';
@@ -34,7 +55,7 @@ const api = {
     get: async (endpoint) => {
         const token = auth.getToken();
         if (!token) return null;
-        
+
         try {
             const response = await fetch(`${BASE_URL}${endpoint}`, {
                 headers: {
@@ -66,11 +87,11 @@ function formatDate(dateString) {
 function checkAuthRedirect() {
     const isAuth = auth.isAuthenticated();
     const path = window.location.pathname;
-    
+
     // Normalize path to handle local running (e.g. /login.html vs /frontend/login.html)
     const isLoginPage = path.endsWith('login.html');
     const isDashboard = path.endsWith('dashboard.html');
-    
+
     if (!isAuth && isDashboard) {
         window.location.href = 'login.html';
     } else if (isAuth && isLoginPage) {

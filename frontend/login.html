@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TaskMaster</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container flex justify-center items-center" style="min-height: 100vh;">
         <div class="card" style="width: 100%; max-width: 400px;">
@@ -14,23 +16,39 @@
                 <p style="color: var(--text-secondary);">Please enter your details to sign in.</p>
             </div>
 
-            <form id="loginForm">
+            <form id="authForm">
                 <div class="input-group">
                     <label class="input-label" for="username">Username</label>
                     <input type="text" id="username" class="form-input" required>
                 </div>
+
+                <div id="signupFields" style="display: none;">
+                    <div class="input-group">
+                        <label class="input-label" for="email">Email <span
+                                style="font-weight: normal; color: var(--text-secondary);">(Optional)</span></label>
+                        <input type="email" id="email" class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="phone">Phone <span
+                                style="font-weight: normal; color: var(--text-secondary);">(Optional)</span></label>
+                        <input type="tel" id="phone" class="form-input">
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label class="input-label" for="password">Password</label>
                     <input type="password" id="password" class="form-input" required>
                 </div>
 
-                <div id="errorMsg" style="color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; display: none;"></div>
+                <div id="errorMsg"
+                    style="color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; display: none;"></div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign in</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%;">Sign in</button>
             </form>
 
             <p class="text-center mt-4" style="font-size: 0.875rem; color: var(--text-secondary);">
-                Don't have an account? <a href="#" style="color: var(--primary-color);">Sign up</a>
+                <span id="toggleText">Don't have an account?</span>
+                <a href="#" id="toggleBtn" style="color: var(--primary-color);">Sign up</a>
             </p>
         </div>
     </div>
@@ -39,21 +57,65 @@
     <script>
         checkAuthRedirect();
 
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        const form = document.getElementById('authForm');
+        const signupFields = document.getElementById('signupFields');
+        const title = document.querySelector('h2');
+        const subtitle = document.querySelector('.text-center p');
+        const submitBtn = document.getElementById('submitBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const toggleText = document.getElementById('toggleText');
+        const errorMsg = document.getElementById('errorMsg');
+
+        let isLogin = true;
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+
+            if (isLogin) {
+                title.textContent = 'Welcome back';
+                subtitle.textContent = 'Please enter your details to sign in.';
+                signupFields.style.display = 'none';
+                submitBtn.textContent = 'Sign in';
+                toggleText.textContent = "Don't have an account?";
+                toggleBtn.textContent = 'Sign up';
+            } else {
+                title.textContent = 'Create Account';
+                subtitle.textContent = 'Join us to organize your tasks.';
+                signupFields.style.display = 'block';
+                submitBtn.textContent = 'Create Account';
+                toggleText.textContent = 'Already have an account?';
+                toggleBtn.textContent = 'Sign in';
+            }
+            errorMsg.style.display = 'none';
+        });
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
 
-            const result = await auth.login(username, password);
-            
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = true;
+
+            let result;
+            if (isLogin) {
+                result = await auth.login(username, password);
+            } else {
+                result = await auth.register(username, password, email, phone);
+            }
+
             if (result.success) {
                 window.location.href = 'dashboard.html';
             } else {
                 errorMsg.textContent = result.error;
                 errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
             }
         });
     </script>
 </body>
+
 </html>

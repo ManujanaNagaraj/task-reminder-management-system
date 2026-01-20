@@ -4,12 +4,20 @@ from .models import Task
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    phone = serializers.CharField(required=False, write_only=True)
+    email = serializers.EmailField(required=False)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'phone']
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username already taken")
+        return value
 
     def create(self, validated_data):
+        validated_data.pop('phone', None)
         user = User.objects.create_user(**validated_data)
         return user
 
