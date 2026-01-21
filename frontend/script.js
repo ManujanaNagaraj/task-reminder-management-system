@@ -36,9 +36,31 @@ const auth = {
                 // Automatically login after successful registration
                 return await auth.login(username, password);
             }
+
+            // Robust error parsing
+            let errorMessage = 'Registration failed';
+
+            if (data) {
+                if (typeof data === 'string') {
+                    errorMessage = data;
+                } else if (data.non_field_errors && data.non_field_errors.length > 0) {
+                    errorMessage = data.non_field_errors[0];
+                } else if (data.detail) {
+                    errorMessage = data.detail;
+                } else {
+                    // Find the first available error message from any field
+                    const keys = Object.keys(data);
+                    if (keys.length > 0) {
+                        const firstKey = keys[0];
+                        const errorContent = data[firstKey];
+                        errorMessage = Array.isArray(errorContent) ? errorContent[0] : errorContent;
+                    }
+                }
+            }
+
             return {
                 success: false,
-                error: data.username?.[0] || data.email?.[0] || data.password?.[0] || data.non_field_errors?.[0] || 'Registration failed'
+                error: errorMessage
             };
         } catch (error) {
             return { success: false, error: 'Network error occurred' };
